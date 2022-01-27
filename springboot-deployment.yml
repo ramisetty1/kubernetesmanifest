@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-postgres
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: spring-boot-postgres
+  replicas: 2
+  template:
+    metadata:
+      name: spring-boot-postgres
+      labels:
+        app: spring-boot-postgres
+    spec:
+      containers:
+      - name: spring-boot-postgres
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                 name: postgres-secrets
+                 key: username
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                 name: postgres-secrets
+                 key: password
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                name: hostname-config
+                key: postgres_host
+        image: ramisetty32/springboot:latest
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: spring-boot-postgres
+  name: spring-boot-postgres
+spec:
+  ports:
+    - name: spring-boot-postgres
+      port: 8090
+      protocol: TCP
+  selector:
+    app: spring-boot-postgres
+  type: LoadBalancer
